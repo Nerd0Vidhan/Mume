@@ -13,6 +13,8 @@ retrofit = "2.11.0"
 okhttp = "4.12.0"
 navigation-compose = "2.8.5"
 coil = "2.6.0"
+room = "2.8.4"
+media3Session = "1.9.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -47,9 +49,11 @@ okhttp-log = { group = "com.squareup.okhttp3", name = "logging-interceptor", ver
 
 # Image
 coil = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+androidx-media3-session = { group = "androidx.media3", name = "media3-session", version.ref = "media3Session" }
 
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+room = { id = "androidx.room", version.ref = "room" }

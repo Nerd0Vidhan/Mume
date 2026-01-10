@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
     id("dagger.hilt.android.plugin")
+    alias(libs.plugins.room)
 }
 
 android {
@@ -40,6 +41,9 @@ android {
         compose = true
     }
 }
+room {
+    schemaDirectory("$projectDir/schemas")
+}
 
 dependencies {
     implementation(libs.androidx.core.ktx)
@@ -50,6 +54,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.media3.session)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -58,6 +63,8 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(libs.nav.compose)
+    implementation("androidx.compose.material:material-icons-extended:current_version")
+
 
     //paging 3
     implementation("androidx.paging:paging-runtime:3.4.0-beta01")
@@ -84,4 +91,10 @@ dependencies {
 
     //gson library
     implementation("com.google.code.gson:gson:2.11.0")
+
+    // Room components
+    val room_version = "2.6.1" // Replace with the latest stable version
+    implementation("androidx.room:room-runtime:$room_version")
+    ksp("androidx.room:room-compiler:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
 }

@@ -3,6 +3,7 @@ package com.lokal.mume.presentation.topBar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -14,9 +15,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.rememberNavController
 import com.lokal.mume.presentation.home.BottomBar
-import com.lokal.mume.presentation.home.HomeScreen
+import com.lokal.mume.presentation.home.HomeScreenContent
 
 @Composable
 fun HomeScreen(
@@ -29,12 +31,16 @@ fun HomeScreen(
         },
         bottomBar = {
             BottomBar(bottomNavController)
-        }
+        },
+        containerColor = Color.Transparent
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)
-            .verticalScroll(rememberScrollState())) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding) // ✅ ONLY padding
+        ){
 //            HomeNavGraph(navController = bottomNavController)
-            HomeScreen()
+            HomeScreenContent()
         }
     }
 //    Column(

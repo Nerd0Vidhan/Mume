@@ -14,4 +14,7 @@ sealed class Screen(val route: String) {
     object Artist : Screen("artist")
     object Album : Screen("album")
     object Folder : Screen("folder")
+
+    // Full Screen Player
+    object FullScreen :Screen("player_full")
 }

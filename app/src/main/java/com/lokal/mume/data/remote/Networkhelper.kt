@@ -1,6 +1,7 @@
 package com.lokal.mume.data.remote
 
 import com.lokal.mume.data.model.ArtistResponse
+import com.lokal.mume.data.model.SongResponse
 import com.lokal.mume.domain.repository.ResultWrapper
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -28,4 +29,11 @@ interface NetworkHelper {
         @Query("query") query: String,
         @Query("limit") limit: Int = 20
     ): ArtistResponse
+
+    @GET("search/songs")
+    suspend fun randomSongsByGenre(
+        @Query("query") query: String,
+        @Query("limit") limit: Int = 5
+    ): SongResponse
+
 }

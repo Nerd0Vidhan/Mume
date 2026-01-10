@@ -2,6 +2,8 @@ package com.lokal.mume.presentation.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -43,7 +45,6 @@ fun BottomBar(
     navController: NavController,
     isClippedEdge: Boolean? = true
 ) {
-    // Define our custom shape and transparent color
     val bottomBarShape = SquircleShape(
         topStart = 40.dp,
         topEnd = 40.dp,
@@ -51,55 +52,51 @@ fun BottomBar(
         bottomEnd = 0.dp,
         cornerSmoothing = CornerSmoothing.High
     )
-    val backgroundColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
 
-    Row(
+    // Using a lower alpha for that "behind the bar" glass look
+    val backgroundColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.4f)
+
+    // Outer container: Handles the background color that fills the navigation bar area
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .wrapContentHeight()
-            // Applying background with the shape handles both clipping and coloring
             .background(
                 color = backgroundColor,
                 shape = if (isClippedEdge == true) bottomBarShape else RectangleShape
             )
-            .padding(vertical = 8.dp, horizontal = 16.dp)
-            .navigationBarsPadding(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
     ) {
-        // Home / TabOne Option
-        BottomBarItem(
-            icon = Icons.Default.Home,
-            route = Screen.Home.route,
-            navController = navController
-        )
+        // Inner container: Handles the actual layout and pushes content above system bars
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding() // Pushes icons above the system nav bar
+                .padding(vertical = 12.dp, horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val items = listOf(
+                Triple(Icons.Default.Home, "Home", Screen.Home.route),
+                Triple(Icons.Default.FavoriteBorder, "Favorites", Screen.Favorites.route),
+                Triple(Icons.Default.List, "Playlist", Screen.Playlist.route),
+                Triple(Icons.Default.Settings, "Settings", Screen.Settings.route)
+            )
 
-        // Library Option
-        BottomBarItem(
-            icon = Icons.Default.FavoriteBorder,
-            route = Screen.Favorites.route,
-            navController = navController
-        )
-
-        // Profile Option
-        BottomBarItem(
-            icon = Icons.Default.List,
-            route = Screen.Playlist.route,
-            navController = navController
-        )
-
-        // Settings Option
-        BottomBarItem(
-            icon = Icons.Default.Settings,
-            route = Screen.Settings.route,
-            navController = navController
-        )
+            items.forEach { (icon, label, route) ->
+                BottomBarItem(
+                    icon = icon,
+                    label = label,
+                    route = route,
+                    navController = navController
+                )
+            }
+        }
     }
 }
 
 @Composable
 fun BottomBarItem(
     icon: ImageVector,
+    label: String,
     route: String,
     navController: NavController
 ) {
@@ -107,33 +104,35 @@ fun BottomBarItem(
     val currentRoute = navBackStackEntry?.destination?.route
     val isSelected = currentRoute == route
 
-    IconButton(onClick = {
-        if (currentRoute != route) {
-            navController.navigate(route) {
-                // Pop up to the start destination of the graph to
-                // avoid building up a large stack of destinations
-                popUpTo(navController.graph.findStartDestination().id) {
-                    saveState = true
+    val color = if (isSelected) MaterialTheme.colorScheme.primary
+    else MaterialTheme.colorScheme.onSurface
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(4.dp)
+    ) {
+        IconButton(onClick = {
+            if (currentRoute != route) {
+                navController.navigate(route) {
+                    // Clear backstack to the start destination
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
                 }
-                // Avoid multiple copies of the same destination when
-                // reselecting the same item
-                launchSingleTop = true
-                // Restore state when reselecting a previously selected item
-                restoreState = true
             }
+        }) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = color
+            )
         }
-    }) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            // Highlight the icon if it's the active route
-            tint = if (isSelected) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.onSurfaceVariant
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = color
         )
     }
-}
-@Preview(showBackground = true)
-@Composable
-fun prev(){
-    BottomBar(rememberNavController())
 }
