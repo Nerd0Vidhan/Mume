@@ -43,15 +43,4 @@ fun HomeScreen(
             HomeScreenContent()
         }
     }
-//    Column(
-//        modifier = modifier
-//            .fillMaxWidth()
-//            .background(MaterialTheme.colorScheme.background)
-//            .statusBarsPadding()
-//    ) {
-//        TopBarHeader()
-//        TopBarTabs()
-//        HomeScreen()
-//        BottomBar(rememberNavController())
-//    }
 }

@@ -36,6 +36,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.lokal.mume.navigation.BottomNavItem
 import com.lokal.mume.navigation.Screen
 import sv.lib.squircleshape.CornerSmoothing
 import sv.lib.squircleshape.SquircleShape
@@ -75,10 +76,10 @@ fun BottomBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             val items = listOf(
-                Triple(Icons.Default.Home, "Home", Screen.Home.route),
-                Triple(Icons.Default.FavoriteBorder, "Favorites", Screen.Favorites.route),
-                Triple(Icons.Default.List, "Playlist", Screen.Playlist.route),
-                Triple(Icons.Default.Settings, "Settings", Screen.Settings.route)
+                Triple(Icons.Default.Home, "Home", BottomNavItem.Home.route),
+                Triple(Icons.Default.FavoriteBorder, "Favorites", BottomNavItem.Favorites.route),
+                Triple(Icons.Default.List, "Playlist", BottomNavItem.Playlists.route),
+                Triple(Icons.Default.Settings, "Settings", BottomNavItem.Settings.route)
             )
 
             items.forEach { (icon, label, route) ->

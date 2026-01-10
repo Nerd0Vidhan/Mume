@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.lokal.mume.navigation.BottomNavItem
 import com.lokal.mume.navigation.MumeNavGraph
 import com.lokal.mume.navigation.Screen
 import com.lokal.mume.presentation.home.BottomBar
@@ -62,7 +63,7 @@ fun RootPlayerHost(navController: NavHostController) {
                             state = state,
                             onExpand = {
                                 navController.navigate(Screen.FullScreen.route) {
-                                    popUpTo(Screen.Home.route) { inclusive = false }
+                                    popUpTo(BottomNavItem.Home.route) { inclusive = false }
                                     launchSingleTop = true
                                 }
                             },
@@ -74,7 +75,7 @@ fun RootPlayerHost(navController: NavHostController) {
                         FullPlayerScreen(
                             navController = navController,
                             viewModel = playerViewModel,
-                            onCollapse = { navController.popBackStack() },
+                            onCollapse = { (navController.popBackStack()) },
                             sharedTransitionScope = this@SharedTransitionLayout,
                             animatedVisibilityScope = this
                         )

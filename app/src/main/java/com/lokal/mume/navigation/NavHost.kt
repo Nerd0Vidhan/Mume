@@ -6,6 +6,10 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.lokal.mume.dummy.FavoritesDummy
+import com.lokal.mume.dummy.HomeDummy
+import com.lokal.mume.dummy.PlaylistsDummy
+import com.lokal.mume.dummy.SettingsDummy
 import com.lokal.mume.presentation.player.ui.FullPlayerScreen
 import com.lokal.mume.presentation.topBar.HomeScreen
 
@@ -18,12 +22,15 @@ fun MumeNavGraph(
     NavHost(
         navController = navController,
         route = "root_graph",
-        startDestination = Screen.Home.route
+        startDestination = BottomNavItem.Home.route
     ) {
-        composable(Screen.Home.route) { 
-            HomeScreen() 
-        }
-        
+
+        composable(BottomNavItem.Home.route) { HomeScreen() }
+        composable(BottomNavItem.Favorites.route) { FavoritesDummy() }
+        composable(BottomNavItem.Playlists.route) { PlaylistsDummy() }
+        composable(BottomNavItem.Settings.route) { SettingsDummy() }
+
+
         composable(Screen.FullScreen.route) {
             FullPlayerScreen(
                 navController = navController,
