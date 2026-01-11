@@ -8,20 +8,25 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.lokal.mume.data.mapper.toSongModel
 import com.lokal.mume.data.model.SongResult
 import com.lokal.mume.playback.PlaybackState
+import com.lokal.mume.presentation.player.PlayerViewModel
 import com.lokal.mume.presentation.utils.SquircleShapeContainer
 import com.lokal.mume.presentation.utils.formatTime
 
@@ -30,7 +35,11 @@ fun SongListItem(
     song: SongResult,
     onPlayClick: () -> Unit,
     onMoreClick: () -> Unit,
+    viewModel: PlayerViewModel = hiltViewModel()
 ) {
+    val state by viewModel.playbackState.collectAsState()
+    val isCurrentSong = state.currentSong?.id == song.id
+    val isThisSongPlaying = isCurrentSong && state.isPlaying
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -41,7 +50,7 @@ fun SongListItem(
         SquircleShapeContainer(
             song = song.toSongModel(),
             size = 56.dp,
-            cornerRadius = 14.dp
+            cornerRadius = 24.dp
         )
 
         Column(
@@ -62,9 +71,11 @@ fun SongListItem(
             )
         }
 
-        IconButton(onClick = onPlayClick) {
+        IconButton(onClick =
+            { if (isThisSongPlaying ) viewModel.pause() else viewModel.play(song.toSongModel())
+            }) {
             Icon(
-                imageVector = Icons.Filled.PlayArrow,
+                imageVector = if (isThisSongPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                 contentDescription = "Play",
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(28.dp)

@@ -1,5 +1,6 @@
 package com.lokal.mume.presentation.album
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,13 +16,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.lokal.mume.presentation.home.HomeViewModel
+import com.lokal.mume.presentation.utils.CustomHorizontalDivider
 
 
 @Composable
@@ -29,6 +33,7 @@ fun AlbumListScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     navController: NavHostController
 ) {
+    val context = LocalContext.current
     val albums = viewModel.albumPagingFlow.collectAsLazyPagingItems()
 
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
@@ -48,10 +53,11 @@ fun AlbumListScreen(
                 style = MaterialTheme.typography.labelLarge
             )
         }
+        CustomHorizontalDivider(thickness = 1.dp)
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(16.dp, bottom = 80.dp),
+            contentPadding = PaddingValues(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -62,8 +68,15 @@ fun AlbumListScreen(
                 albums[index]?.let { album ->
                     AlbumGridItem(
                         album = album,
-                        onClick = { navController.navigate("album_detail/${album.id}") }
+                        onClick = { /*navController.navigate("album_detail/${album.id}")*/
+                            Toast.makeText(context,"Album Clicked->>${album.name}",Toast.LENGTH_SHORT).show()
+                        }
                     )
+                }
+            }
+            if (albums.loadState.append is LoadState.Loading) {
+                items(2) {
+                    AlbumShimmerItem()
                 }
             }
         }

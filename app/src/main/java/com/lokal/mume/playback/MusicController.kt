@@ -61,4 +61,21 @@ class MusicController @Inject constructor(
         service?.seekBackward()
     }
 
+    fun prepare(song: SongModel) {
+        if (!bound) connect()
+        service?.prepare(song)
+    }
+
+    fun bufferNext(song: SongModel) {
+        if (!bound) connect()
+        service?.bufferNext(song) // Adds to the playlist internally
+    }
+
+    fun release() {
+        if (bound) {
+            context.unbindService(connection)
+            bound = false
+        }
+    }
+
 }

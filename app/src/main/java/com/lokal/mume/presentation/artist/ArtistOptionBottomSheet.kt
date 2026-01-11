@@ -31,8 +31,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
+import com.lokal.mume.data.mapper.toSongModel
 import com.lokal.mume.data.model.ArtistResult
+import com.lokal.mume.presentation.home.HomeViewModel
+import com.lokal.mume.presentation.player.PlayerViewModel
 import com.lokal.mume.presentation.song.bottomSheet.SheetOption
 import com.lokal.mume.presentation.utils.CustomHorizontalDivider
 import sv.lib.squircleshape.CornerSmoothing
@@ -42,8 +47,12 @@ import sv.lib.squircleshape.SquircleShape
 @Composable
 fun ArtistOptionsBottomSheet(
     artist: ArtistResult,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    playerViewModel: PlayerViewModel = hiltViewModel(), // Inject ViewModel
+    homeViewModel: HomeViewModel = hiltViewModel()
 ) {
+
+    val artistSongs = homeViewModel.artistSongPagingFlow.collectAsLazyPagingItems().itemSnapshotList.items
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = MaterialTheme.colorScheme.surface,
@@ -71,9 +80,15 @@ fun ArtistOptionsBottomSheet(
             CustomHorizontalDivider(alpha = 0.08f)
 
             val options = listOf(
-                SheetOption(Icons.Outlined.PlayCircle, "Play") {},
-                SheetOption(Icons.Outlined.PlayCircleFilled, "Play Next") {},
-                SheetOption(Icons.Outlined.QueueMusic, "Add to Playing Queue") {},
+                SheetOption(Icons.Outlined.PlayCircle, "Play") {
+                    playerViewModel.playAll(artistSongs)
+                },
+                SheetOption(Icons.Outlined.PlayCircleFilled, "Play Next") {
+                    artistSongs.firstOrNull()?.let { playerViewModel.playNextInQueue(it.toSongModel()) }
+                },
+                SheetOption(Icons.Outlined.QueueMusic, "Add to Playing Queue") {
+                    playerViewModel.addAllToQueue(artistSongs)
+                },
                 SheetOption(Icons.Outlined.AddCircleOutline, "Add to Playlist") {},
                 SheetOption(Icons.Outlined.Share, "Share") {}
             )

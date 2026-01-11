@@ -38,9 +38,7 @@ fun HomeTabNavHost(
         }
 
         composable("songs") {
-            SongsListScreen(
-
-            )
+            SongsListScreen()
         }
 
         // Tab 3: Artists (Paginated Grid/List of Artists)

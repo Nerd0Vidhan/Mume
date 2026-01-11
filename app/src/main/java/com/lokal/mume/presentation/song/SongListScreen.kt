@@ -81,8 +81,11 @@ fun SongsListScreen(
         ) {
             items(
                 count = songs.itemCount,
-                key = songs.itemKey { it.id }
-            ) { index ->
+                key = { index ->
+                    val song = songs.peek(index)
+                    "${song?.id ?: index}_$index"
+                }
+                    ) { index ->
                 val song = songs[index]
                 if (song != null) {
                     SongListItem(
@@ -101,7 +104,7 @@ fun SongsListScreen(
             songs.apply {
                 when {
                     loadState.refresh is LoadState.Loading -> {
-                        items(10) { CircleShimmerPlaceholder(30.dp) }
+                        items(10) {SongItemShimmer() }
                     }
                     loadState.append is LoadState.Loading -> {
                         item { CircularProgressIndicator(Modifier.fillMaxWidth().padding(16.dp)) }

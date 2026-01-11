@@ -1,6 +1,7 @@
 package com.lokal.mume.data.remote
 
 import com.lokal.mume.data.model.AlbumResult
+import com.lokal.mume.data.model.ArtistDetailsResponse
 import com.lokal.mume.data.model.ArtistResponse
 import com.lokal.mume.data.model.ArtistResult
 import com.lokal.mume.data.model.BaseResponse
@@ -55,5 +56,10 @@ interface NetworkHelper {
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20
     ): BaseResponse<PaginatedData<AlbumResult>>
+
+    @GET("artists")
+    suspend fun getArtistDetails(
+        @Query("id") artistId: String
+    ): BaseResponse<ArtistDetailsResponse>
 
 }

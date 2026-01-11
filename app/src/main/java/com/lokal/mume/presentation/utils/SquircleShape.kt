@@ -21,7 +21,8 @@ import sv.lib.squircleshape.SquircleShape
 
 @Composable
 fun SquircleShapeContainer(
-    song: SongModel,
+    song: SongModel? = null,
+    artistResult: ArtistResult? =null,
     size: Dp,
     cornerRadius: Dp,
     modifier: Modifier = Modifier,
@@ -31,7 +32,7 @@ fun SquircleShapeContainer(
         cornerSmoothing = CornerSmoothing.High
     )
     AsyncImage(
-        model = song.artwork,
+        model = song?.artwork ?: artistResult?.image?.lastOrNull()?.url,//artist.image.lastOrNull()?.url
         contentDescription = "Squircle Container",
         modifier = modifier
             .size(size)

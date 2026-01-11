@@ -11,6 +11,7 @@ data class SongEntity(
     val genre: String,
     val streamUrl: String,
     val artwork: String,
+    val lastPosition: Long = 0L,
     val playedAt: Long,
     val isInQueue: Boolean
 )

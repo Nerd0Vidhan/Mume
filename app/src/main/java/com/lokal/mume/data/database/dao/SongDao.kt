@@ -28,4 +28,10 @@ ORDER BY playedAt DESC
 """)
     suspend fun getHistory(): List<SongEntity>
 
+    @Query("UPDATE songs SET isInQueue = 0 WHERE id = :songId")
+    suspend fun removeFromQueue(songId: String)
+
+    @Query("UPDATE songs SET lastPosition = :position, playedAt = :timestamp WHERE id = :songId")
+    suspend fun updateProgress(songId: String, position: Long, timestamp: Long)
+
 }

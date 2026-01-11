@@ -25,6 +25,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.lokal.mume.data.model.ArtistResult
 import com.lokal.mume.domain.model.SongModel
+import com.lokal.mume.navigation.Screen
 import com.lokal.mume.presentation.player.HistoryViewModel
 import com.lokal.mume.presentation.player.PlayerViewModel
 import com.lokal.mume.presentation.utils.*
@@ -71,14 +72,31 @@ fun HomeScreenContent(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(history, key = { it.id }) { song ->
-                            SquircleShapeContainer(
-                                song = song,
-                                size = elementSize,
-                                cornerRadius = elementSize / 3,
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier.clickable {
                                     playerViewModel.play(song)
                                 }
-                            )
+                            ) {
+                                SquircleShapeContainer(
+                                    song = song,
+                                    size = elementSize,
+                                    cornerRadius = elementSize / 3,
+                                    modifier = Modifier.clickable {
+                                        playerViewModel.play(song)
+                                        navController.navigate(Screen.FullScreen.route)
+                                    }
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = song.title,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.width(elementSize)
+                                )
+                            }
                         }
                     }
                 }
@@ -105,6 +123,7 @@ fun HomeScreenContent(
                                 sharedTransitionScope = sharedTransitionScope,
                                 animatedVisibilityScope = animatedVisibilityScope,
                                 onClick = {
+                                    navController.currentBackStackEntry?.savedStateHandle?.set("artist", artist)
                                     navController.navigate("artist_detail/${artist.id}")
                                 }
                             )
@@ -169,6 +188,7 @@ fun HomeScreenContent(
                                         cornerRadius = elementSize / 3,
                                         modifier = Modifier.clickable {
                                             playerViewModel.play(song)
+                                            navController.navigate(Screen.FullScreen.route)
                                         }
                                     )
                                     Spacer(modifier = Modifier.height(6.dp))

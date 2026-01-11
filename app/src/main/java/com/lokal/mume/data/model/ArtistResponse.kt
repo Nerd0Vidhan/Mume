@@ -1,7 +1,9 @@
 package com.lokal.mume.data.model
 
+import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
 import com.lokal.mume.domain.model.ArtistDetails
+import kotlinx.parcelize.Parcelize
 
 data class ArtistResponse(
     @SerializedName("success") val success: Boolean,
@@ -14,6 +16,7 @@ data class ArtistData(
     @SerializedName("results") val results: List<ArtistResult>
 )
 
+@Parcelize
 data class ArtistResult(
     @SerializedName("id") val id: String,
     @SerializedName("name") val name: String,
@@ -21,7 +24,7 @@ data class ArtistResult(
     @SerializedName("image") val image: List<ArtistImage>,
     @SerializedName("type") val type: String,
     @SerializedName("url") val url: String
-){
+): Parcelable {
     companion object{
         fun toDomain(artist: ArtistResult) = ArtistDetails(
             id = artist.id,
@@ -33,7 +36,18 @@ data class ArtistResult(
     }
 }
 
+@Parcelize
 data class ArtistImage(
     @SerializedName("quality") val quality: String,
     @SerializedName("url") val url: String
+): Parcelable
+
+
+data class ArtistDetailsResponse(
+    @SerializedName("id") val id: String,
+    @SerializedName("name") val name: String,
+    @SerializedName("albumCount") val albumCount: Int?,
+    @SerializedName("songCount") val songCount: Int?,
+    // Saavn API often provides total play time or you can calculate it from top songs
+    @SerializedName("topSongs") val topSongs: List<SongResult>
 )

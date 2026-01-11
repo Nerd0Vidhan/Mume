@@ -25,6 +25,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.lokal.mume.data.model.AlbumResult
+import sv.lib.squircleshape.CornerSmoothing
+import sv.lib.squircleshape.SquircleShape
 
 @Composable
 fun AlbumGridItem(
@@ -44,7 +46,7 @@ fun AlbumGridItem(
             modifier = Modifier
                 .aspectRatio(1f)
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
+                .clip(SquircleShape(50.dp, cornerSmoothing = CornerSmoothing.High))
         )
 
         Spacer(modifier = Modifier.height(8.dp))

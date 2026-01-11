@@ -25,14 +25,17 @@ fun RootPlayerHost(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val isFullScreenPlayer = currentRoute == Screen.FullScreen.route
+    val isFullScreenComposable = currentRoute == Screen.FullScreen.route
+            || currentRoute == Screen.Search.route
+            || currentRoute == "artist_detail/{artistId}"
+
+
 
     SharedTransitionLayout {
-        // In RootPlayerHost.kt
         Scaffold(
             topBar = {
                 AnimatedVisibility(
-                    visible = !isFullScreenPlayer,
+                    visible = !isFullScreenComposable,
                     enter = fadeIn(),
                     exit = fadeOut()
                 ) { TopBarHeader(navController) }
@@ -40,7 +43,7 @@ fun RootPlayerHost(navController: NavHostController) {
             bottomBar = {
                 // Use AnimatedVisibility instead of 'if' to allow Shared Elements to finish
                 AnimatedVisibility(
-                    visible = !isFullScreenPlayer,
+                    visible = !isFullScreenComposable,
                     enter = slideInVertically(initialOffsetY = { it }),
                     exit = slideOutVertically(targetOffsetY = { it })
                 ) {

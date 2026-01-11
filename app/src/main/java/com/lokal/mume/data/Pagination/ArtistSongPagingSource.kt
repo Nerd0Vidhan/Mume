@@ -2,20 +2,19 @@ package com.lokal.mume.data.Pagination
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
+import com.lokal.mume.data.model.ArtistResult
 import com.lokal.mume.data.model.SongResult
 import com.lokal.mume.data.remote.NetworkHelper
 
-class SongPagingSource(
+class ArtistSongPagingSource(
     private val api: NetworkHelper,
-    private val query: String,
-    private val sort: String
+    private val artistName: String
 ) : PagingSource<Int, SongResult>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, SongResult> {
         return try {
             val currentPage = params.key ?: 1
-            // Fetching from the search/songs endpoint
-            val response = api.searchSongs(query = query, page = currentPage, limit = params.loadSize,sort = sort)
+            val response = api.searchSongs(query = artistName, page = currentPage, limit = params.loadSize)
             val results = response.data.results
 
             LoadResult.Page(
@@ -28,10 +27,5 @@ class SongPagingSource(
         }
     }
 
-    override fun getRefreshKey(state: PagingState<Int, SongResult>): Int? {
-        return state.anchorPosition?.let { anchorPosition ->
-            state.closestPageToPosition(anchorPosition)?.prevKey?.plus(1)
-                ?: state.closestPageToPosition(anchorPosition)?.nextKey?.minus(1)
-        }
-    }
+    override fun getRefreshKey(state: PagingState<Int, SongResult>): Int? = state.anchorPosition
 }

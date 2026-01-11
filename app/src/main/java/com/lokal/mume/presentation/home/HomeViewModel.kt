@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import com.lokal.mume.data.mapper.toSongModel
+import com.lokal.mume.data.model.ArtistDetailsResponse
 import com.lokal.mume.data.model.ArtistResult
 import com.lokal.mume.data.model.SongResult
 import com.lokal.mume.domain.model.SongModel
@@ -41,6 +42,25 @@ class HomeViewModel @Inject constructor(
     val albumPagingFlow = networkCallRepo.getAlbumsPaging("latest")
         .cachedIn(viewModelScope)
 
+    private val _artistSongQuery = MutableStateFlow("")
+
+    private val _artistDetails = MutableStateFlow<UiState<ArtistDetailsResponse>>(UiState.Nothing)
+    val artistDetails = _artistDetails.asStateFlow()
+
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val artistSongPagingFlow = _artistSongQuery.flatMapLatest { query ->
+        if (query.isEmpty()) {
+            kotlinx.coroutines.flow.flowOf(androidx.paging.PagingData.empty())
+        } else {
+            networkCallRepo.getArtistSongsPaging(query)
+        }
+    }.cachedIn(viewModelScope)
+
+    fun getArtistSongs(artistName: String) {
+        _artistSongQuery.value = artistName
+    }
+
     private val _currentSort = MutableStateFlow(SortType("Ascending", "asc"))
     val currentSort = _currentSort.asStateFlow()
 
@@ -69,6 +89,19 @@ class HomeViewModel @Inject constructor(
                 }
                 is ResultWrapper.Failure -> {
                     _mostPlayedState.value = UiState.Error(result.errorMessage)
+                }
+            }
+        }
+    }
+    fun fetchArtistDetails(artistId: String) {
+        viewModelScope.launch {
+            _artistDetails.value = UiState.Loading
+            when (val result = networkCallRepo.getArtistDetails(artistId)) {
+                is ResultWrapper.Success -> {
+                    _artistDetails.value = UiState.Success(result.value.data)
+                }
+                is ResultWrapper.Failure -> {
+                    _artistDetails.value = UiState.Error(result.errorMessage)
                 }
             }
         }

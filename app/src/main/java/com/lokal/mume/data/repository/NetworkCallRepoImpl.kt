@@ -6,6 +6,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.lokal.mume.data.Pagination.AlbumPagingSource
 import com.lokal.mume.data.Pagination.ArtistPagingSource
+import com.lokal.mume.data.Pagination.ArtistSongPagingSource
 import com.lokal.mume.data.Pagination.SongPagingSource
 import com.lokal.mume.data.database.dao.SongDao
 import com.lokal.mume.data.mapper.toDomain
@@ -22,6 +23,8 @@ import com.lokal.mume.domain.repository.ResultWrapper
 import kotlinx.coroutines.flow.Flow
 import com.lokal.mume.data.model.SongResult
 import com.lokal.mume.data.model.AlbumResult
+import com.lokal.mume.data.model.ArtistDetailsResponse
+import com.lokal.mume.data.model.BaseResponse
 import java.io.IOException
 import javax.inject.Inject
 
@@ -114,5 +117,49 @@ class NetworkCallRepoImpl @Inject constructor(
             config = PagingConfig(pageSize = 20, prefetchDistance = 2),
             pagingSourceFactory = { AlbumPagingSource(api, query) }
         ).flow
+    }
+
+    override fun getArtistSongsPaging(artistName: String): Flow<PagingData<SongResult>> {
+        return Pager(
+            config = PagingConfig(pageSize = 20, prefetchDistance = 2),
+            pagingSourceFactory = { ArtistSongPagingSource(api, artistName) }
+        ).flow
+    }
+    override suspend fun getArtistDetails(artistId: String): ResultWrapper<BaseResponse<ArtistDetailsResponse>> {
+        return try {
+            val response = api.getArtistDetails(artistId)
+            ResultWrapper.Success(response)
+        } catch (e: Exception) {
+            ResultWrapper.Failure(e.message ?: "An unknown error occurred")
+        }
+    }
+
+    override suspend fun addToQueue(song: SongModel, atTop: Boolean) {
+        val entity = song.toEntity(isInQueue = true).copy(
+            isInQueue = true,
+            playedAt = if (atTop) System.currentTimeMillis() - 1000000 else System.currentTimeMillis()
+        )
+        dao.insert(entity)
+    }
+
+    override suspend fun getNextInQueue(): SongModel? {
+        return dao.getQueue().firstOrNull()?.toSongModel()
+    }
+
+    override suspend fun removeFromQueue(songId: String) {
+        dao.removeFromQueue(songId)
+    }
+
+    override suspend fun getRandomSongs(): List<SongModel> {
+        val response = api.randomSongsByGenre(query = "trending", limit = 10)
+        return response.data.results.map { it.toSongModel() }
+    }
+
+    override suspend fun updateLastPosition(songId: String, position: Long) {
+        dao.updateProgress(
+            songId = songId,
+            position = position,
+            timestamp = System.currentTimeMillis() // Update playedAt so it stays in history
+        )
     }
 }

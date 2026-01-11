@@ -23,14 +23,19 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.media3.session.MediaSession
+import com.lokal.mume.domain.repository.NetworkCallRepo
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MusicService : Service() {
 
     private val binder = MusicBinder()
     lateinit var player: ExoPlayer
+
+    @Inject
+    lateinit var repo: NetworkCallRepo
     private var mediaSession: MediaSession? = null
-    
+
     private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
     private var progressJob: Job? = null
 
@@ -65,6 +70,17 @@ class MusicService : Service() {
         })
 
         startForeground(1, createNotification())
+    }
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        // Save current position to history when user kills the app
+        val currentSong = PlaybackStateHolder.state.value.currentSong
+        if (currentSong != null) {
+            val position = player.currentPosition
+            serviceScope.launch(Dispatchers.IO) {
+                repo.updateLastPosition(currentSong.id, position)
+            }
+        }
+        super.onTaskRemoved(rootIntent)
     }
 
     private fun updateState() {
@@ -113,6 +129,15 @@ class MusicService : Service() {
             duration = 0L,
             position = 0L
         )
+    }
+    fun bufferNext(song: SongModel) {
+        // Adds to the end of the current playlist for seamless transition
+        player.addMediaItem(MediaItem.fromUri(song.streamUrl320))
+    }
+
+    fun prepare(song: SongModel) {
+        player.setMediaItem(MediaItem.fromUri(song.streamUrl320))
+        player.prepare() // Pre-loads data but doesn't play
     }
 
     fun pause() {

@@ -12,9 +12,11 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.lokal.mume.data.model.ArtistResult
 import com.lokal.mume.dummy.FavoritesDummy
 import com.lokal.mume.dummy.PlaylistsDummy
 import com.lokal.mume.dummy.SettingsDummy
+import com.lokal.mume.presentation.artist.ArtistDetailScreen
 import com.lokal.mume.presentation.player.ui.FullPlayerScreen
 import com.lokal.mume.presentation.search.SearchScreen
 import com.lokal.mume.presentation.topBar.HomeRootScreen
@@ -33,10 +35,10 @@ fun MumeNavGraph(
     ) {
         composable(BottomNavItem.Home.route) {
             HomeRootScreen(
-                modifier = modifier, // The padding modifier from RootPlayerHost
-                rootNavController = navController, // Pass the top-level controller
+                modifier = modifier,
+                rootNavController = navController,
                 sharedTransitionScope = sharedTransitionScope,
-                animatedVisibilityScope = this // 'this' is the AnimatedContentScope from the NavHost
+                animatedVisibilityScope = this
             )
         }
         composable(Screen.Search.route) {
@@ -45,6 +47,25 @@ fun MumeNavGraph(
                 sharedTransitionScope = sharedTransitionScope,
                 animatedVisibilityScope = this)
         }
+
+
+        composable("artist_detail/{artistId}") { backStackEntry ->
+            // Retrieve the object passed from the previous screen
+            val artist = navController.previousBackStackEntry
+                ?.savedStateHandle
+                ?.get<ArtistResult>("artist")
+
+            if (artist != null) {
+                ArtistDetailScreen(
+                    artist = artist,
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedVisibilityScope = this, // Pass the scope of this destination
+                    onBack = { navController.popBackStack() },
+                    navController = navController
+                )
+            }
+        }
+        composable("album_detail/{albumId}") {  }
 
         composable(BottomNavItem.Favorites.route) { FavoritesDummy() }
         composable(BottomNavItem.Playlists.route) { PlaylistsDummy() }
@@ -61,8 +82,8 @@ fun MumeNavGraph(
             FullPlayerScreen(
                 navController = navController,
                 sharedTransitionScope = sharedTransitionScope,
-                animatedVisibilityScope = this, // Correctly refers to AnimatedContentScope
-                onCollapse = { navController.popBackStack()?: navController.navigate(BottomNavItem.Home.route) }
+                animatedVisibilityScope = this,
+                onCollapse = { navController.popBackStack() }
             )
         }
     }

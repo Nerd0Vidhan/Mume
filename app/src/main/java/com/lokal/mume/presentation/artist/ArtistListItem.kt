@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.lokal.mume.data.model.ArtistResult
@@ -33,7 +35,7 @@ fun ArtistListItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onClick() }
-                .padding(8.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
@@ -48,14 +50,22 @@ fun ArtistListItem(
                     .clip(CircleShape),
                 contentScale = ContentScale.Crop
             )
-            Text(
-                text = artist.name,
-                modifier = Modifier.padding(start = 16.dp).sharedElement(
-                    rememberSharedContentState(key = "artist_name_${artist.id}"),
-                    animatedVisibilityScope = animatedVisibilityScope
-                ),
-                style = MaterialTheme.typography.titleMedium
-            )
+
+            Column(modifier = Modifier.padding(start = 16.dp)) {
+                Text(
+                    text = artist.name,
+                    modifier = Modifier.sharedElement(
+                        rememberSharedContentState(key = "artist_name_${artist.id}"),
+                        animatedVisibilityScope = animatedVisibilityScope
+                    ),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                )
+                Text(
+                    text = "1 Album  |  20 Songs", // Replace with dynamic data if available
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

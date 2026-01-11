@@ -1,5 +1,6 @@
 package com.lokal.mume.presentation.search
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -33,9 +34,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -50,6 +55,7 @@ import com.lokal.mume.presentation.album.AlbumGridItem
 import com.lokal.mume.presentation.artist.ArtistListItem
 import com.lokal.mume.presentation.player.PlayerViewModel
 import com.lokal.mume.presentation.song.SongListItem
+import com.lokal.mume.presentation.song.bottomSheet.SongOptionsBottomSheet
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -60,11 +66,23 @@ fun SearchScreen(
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope
 ) {
+    var showSheet by remember { mutableStateOf(false) }
+    var selectedSongForSheet by remember { mutableStateOf<SongResult?>(null) }
+
     val query by viewModel.searchQuery.collectAsStateWithLifecycle()
     val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
     val searchResults = viewModel.searchResults.collectAsLazyPagingItems()
+    val context = LocalContext.current
 
     val categories = listOf("Songs", "Artists", "Albums", "Folders")
+    val albums = remember(searchResults.itemSnapshotList.items, selectedCategory) {
+        if (selectedCategory == "Albums") {
+            searchResults.itemSnapshotList.items.filterIsInstance<AlbumResult>()
+        } else emptyList()
+    }
+
+    val albumRows = remember(albums) { albums.chunked(2) }
+
 
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
         Row(
@@ -108,23 +126,54 @@ fun SearchScreen(
             EmptySearchResultView() 
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
+                if (selectedCategory == "Albums") {
+                    items(albumRows) { rowItems ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            rowItems.forEach { album ->
+                                Box(modifier = Modifier.weight(1f)) {
+                                    AlbumGridItem(album, onClick = {
+                                        Toast.makeText(context,"Album Clicked->>${album.name}",Toast.LENGTH_SHORT).show()
+                                    })
+                                }
+                            }
+                            if (rowItems.size == 1) Spacer(Modifier.weight(1f))
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+                }
+
+
                 items(searchResults.itemCount) { index ->
                     val item = searchResults[index]
                     when (selectedCategory) {
                         "Songs" -> (item as? SongResult)?.let { song ->
-                            SongListItem(song, onPlayClick = { playerViewModel.play(song.toSongModel()) }, onMoreClick = {})
+                            SongListItem(song, onPlayClick = { playerViewModel.play(song.toSongModel()) }, onMoreClick = {
+                                selectedSongForSheet = song
+                                showSheet = true
+                            }
+                            )
                         }
                         "Artists" -> (item as? ArtistResult)?.let { artist ->
                             ArtistListItem(
                                 artist = artist,
                                 sharedTransitionScope = sharedTransitionScope,
                                 animatedVisibilityScope = animatedVisibilityScope,
-                                onClick = { navController.navigate("artist_detail/${artist.id}") }
+                                onClick = {
+                                    navController.currentBackStackEntry?.savedStateHandle?.set("artist", artist)
+                                    navController.navigate("artist_detail/${artist.id}")
+                                }
                             )
                         }
-                        "Albums" -> (item as? AlbumResult)?.let { album ->
-                            AlbumGridItem(album, onClick = { navController.navigate("album_detail/${album.id}") })
-                        }
+//                        "Albums" -> (item as? AlbumResult)?.let { album ->
+//                            AlbumGridItem(album, onClick = { /*navController.navigate("album_detail/${album.id}")*/
+//                                Toast.makeText(context,"Album Clicked->>${album.name}",Toast.LENGTH_SHORT).show()
+//                            })
+//                        }
                     }
                 }
 
@@ -141,6 +190,13 @@ fun SearchScreen(
                     }
                 }
             }
+        }
+        if (showSheet && selectedSongForSheet != null) {
+            SongOptionsBottomSheet(
+                song = selectedSongForSheet!!.toSongModel(),
+                onDismiss = { showSheet = false },
+                onFavoriteClick = { /* Handle Favorite Logic */ }
+            )
         }
     }
 }
