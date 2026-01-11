@@ -1,0 +1,55 @@
+package com.lokal.mume.presentation.artist
+
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
+import com.lokal.mume.presentation.home.HomeViewModel
+
+@Composable
+fun ArtistListScreen(
+    viewModel: HomeViewModel = hiltViewModel(),
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    navController: NavHostController
+) {
+    val artists = viewModel.artistPagingFlow.collectAsLazyPagingItems()
+
+    Column(Modifier.fillMaxSize()) {
+        // Section Header (Image 12)
+        Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("${artists.itemCount} artists", fontWeight = FontWeight.Bold)
+            Text("Date Added ↑↓", color = MaterialTheme.colorScheme.primary)
+        }
+
+        LazyColumn {
+            items(
+                count = artists.itemCount,
+                key = artists.itemKey { it.id }
+            ) { index ->
+                artists[index]?.let { artist ->
+                    ArtistListItem(
+                        artist = artist,
+                        sharedTransitionScope = sharedTransitionScope,
+                        animatedVisibilityScope = animatedVisibilityScope,
+                        onClick = { navController.navigate("artist_detail/${artist.id}") }
+                    )
+                }
+            }
+        }
+    }
+}

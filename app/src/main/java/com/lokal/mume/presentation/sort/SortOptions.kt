@@ -1,11 +1,13 @@
 package com.lokal.mume.presentation.sort
-enum class SortOption(val label: String) {
-    ASCENDING("Ascending"),
-    DESCENDING("Descending"),
-    ARTIST("Artist"),
-    ALBUM("Album"),
-    YEAR("Year"),
-    DATE_ADDED("Date Added"),
-    DATE_MODIFIED("Date Modified"),
-    COMPOSER("Composer")
-}
+data class SortType(val label: String, val value: String)
+
+val sortOptions = listOf(
+    SortType("Ascending", "asc"),
+    SortType("Descending", "desc"),
+    SortType("Artist", "artist"),
+    SortType("Album", "album"),
+    SortType("Year", "year"),
+    SortType("Date Added", "date_added"),
+    SortType("Date Modified", "date_modified"),
+    SortType("Composer", "composer")
+)

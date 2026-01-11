@@ -55,6 +55,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.media3.session)
+    implementation(libs.androidx.compose.ui.text)
+    implementation(libs.androidx.compose.runtime)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -68,6 +70,7 @@ dependencies {
 
     //paging 3
     implementation("androidx.paging:paging-runtime:3.4.0-beta01")
+    implementation("androidx.paging:paging-compose:3.3.6")
 
     // Hilt (KSP)
     implementation(libs.hilt)

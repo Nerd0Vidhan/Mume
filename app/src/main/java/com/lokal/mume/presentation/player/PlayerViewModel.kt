@@ -69,6 +69,12 @@ class PlayerViewModel @Inject constructor(
 
         }
     }
+    // In PlayerViewModel.kt
+    fun seekTo(positionMs: Float) {
+        viewModelScope.launch {
+            controller.seekTo(positionMs.toLong())
+        }
+    }
 
     fun seekForward(){
         viewModelScope.launch {

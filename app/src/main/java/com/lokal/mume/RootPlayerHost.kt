@@ -14,8 +14,8 @@ import com.lokal.mume.navigation.MumeNavGraph
 import com.lokal.mume.navigation.Screen
 import com.lokal.mume.presentation.home.BottomBar
 import com.lokal.mume.presentation.player.PlayerViewModel
-import com.lokal.mume.presentation.player.ui.FullPlayerScreen
 import com.lokal.mume.presentation.player.ui.MiniPlayer
+import com.lokal.mume.presentation.topBar.TopBarHeader
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -25,63 +25,55 @@ fun RootPlayerHost(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Hide bottom bar and mini player on full screen player
     val isFullScreenPlayer = currentRoute == Screen.FullScreen.route
 
     SharedTransitionLayout {
+        // In RootPlayerHost.kt
         Scaffold(
+            topBar = {
+                AnimatedVisibility(
+                    visible = !isFullScreenPlayer,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) { TopBarHeader(navController) }
+            },
             bottomBar = {
-                if (!isFullScreenPlayer) {
-                    BottomBar(
-                        navController = navController,
-                        isClippedEdge = state.currentSong == null,
-                    )
-                }
-            }
-        ) { padding ->
-
-// Inside RootPlayerHost...
-
-            Box(Modifier.fillMaxSize()) {
-                MumeNavGraph(
-                    navController = navController,
-                    sharedTransitionScope = this@SharedTransitionLayout
-                )
-                AnimatedContent(
-                    targetState = (!isFullScreenPlayer && state.currentSong != null),
-                    transitionSpec = {
-                        (slideInVertically { it } + fadeIn())
-                            .togetherWith(slideOutVertically { it } + fadeOut())
-                    },
-                    label = "PlayerTransition",
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(padding)
-                ) { showMiniPlayer ->
-                    if (showMiniPlayer) {
-                        MiniPlayer(
-                            state = state,
-                            onExpand = {
-                                navController.navigate(Screen.FullScreen.route) {
-                                    popUpTo(BottomNavItem.Home.route) { inclusive = false }
-                                    launchSingleTop = true
-                                }
-                            },
-                            sharedTransitionScope = this@SharedTransitionLayout,
-                            animatedVisibilityScope = this,
-                            playerViewModel = playerViewModel
-                        )
-                    } else if (isFullScreenPlayer) {
-                        FullPlayerScreen(
+                // Use AnimatedVisibility instead of 'if' to allow Shared Elements to finish
+                AnimatedVisibility(
+                    visible = !isFullScreenPlayer,
+                    enter = slideInVertically(initialOffsetY = { it }),
+                    exit = slideOutVertically(targetOffsetY = { it })
+                ) {
+                    // Grouping ensures they slide together as a single unit
+                    Column {
+                        AnimatedContent(
+                            targetState = state.currentSong != null,
+                            label = "MiniPlayer"
+                        ) { hasSong ->
+                            if (hasSong) {
+                                MiniPlayer(
+                                    state = state,
+                                    onExpand = { navController.navigate(Screen.FullScreen.route) },
+                                    sharedTransitionScope = this@SharedTransitionLayout,
+                                    animatedVisibilityScope = this@AnimatedVisibility, // Use Scaffold's scope
+                                    playerViewModel = playerViewModel,
+                                    onDismiss = { playerViewModel.pause() }
+                                )
+                            }
+                        }
+                        BottomBar(
                             navController = navController,
-                            viewModel = playerViewModel,
-                            onCollapse = { (navController.popBackStack()) },
-                            sharedTransitionScope = this@SharedTransitionLayout,
-                            animatedVisibilityScope = this
+                            isClippedEdge = state.currentSong == null,
                         )
                     }
                 }
             }
+        ) { padding ->
+            MumeNavGraph(
+                navController = navController,
+                sharedTransitionScope = this@SharedTransitionLayout,
+                modifier = Modifier.padding(padding)
+            )
         }
     }
 }

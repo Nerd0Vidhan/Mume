@@ -15,6 +15,8 @@ navigation-compose = "2.8.5"
 coil = "2.6.0"
 room = "2.8.4"
 media3Session = "1.9.0"
+uiText = "1.10.0"
+runtime = "1.10.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -50,6 +52,8 @@ okhttp-log = { group = "com.squareup.okhttp3", name = "logging-interceptor", ver
 # Image
 coil = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 androidx-media3-session = { group = "androidx.media3", name = "media3-session", version.ref = "media3Session" }
+androidx-compose-ui-text = { group = "androidx.compose.ui", name = "ui-text", version.ref = "uiText" }
+androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
 
 
 [plugins]

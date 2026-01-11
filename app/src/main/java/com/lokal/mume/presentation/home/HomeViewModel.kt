@@ -2,17 +2,21 @@ package com.lokal.mume.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.cachedIn
 import com.lokal.mume.data.mapper.toSongModel
 import com.lokal.mume.data.model.ArtistResult
 import com.lokal.mume.data.model.SongResult
 import com.lokal.mume.domain.model.SongModel
 import com.lokal.mume.domain.repository.NetworkCallRepo
 import com.lokal.mume.domain.repository.ResultWrapper
+import com.lokal.mume.presentation.sort.SortType
 import com.lokal.mume.presentation.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,40 +26,36 @@ class HomeViewModel @Inject constructor(
     private val networkCallRepo: NetworkCallRepo
 ): ViewModel() {
 
-    private val _artistState =
-        MutableStateFlow<UiState<List<ArtistResult>>>(UiState.Nothing)
-    val artistState: StateFlow<UiState<List<ArtistResult>>> =
-        _artistState.asStateFlow()
+    // Standard State for non-paginated sections
+    private val _mostPlayedState = MutableStateFlow<UiState<List<SongModel>>>(UiState.Nothing)
+    val mostPlayedState = _mostPlayedState.asStateFlow()
 
-    private val _mostPlayedState =
-        MutableStateFlow<UiState<List<SongModel>>>(UiState.Nothing)
-    val mostPlayedState: StateFlow<UiState<List<SongModel>>> =
-        _mostPlayedState.asStateFlow()
+    // Paging Flow for Artists
+    val artistPagingFlow = networkCallRepo.getArtistPaging("b")
+        .cachedIn(viewModelScope)
 
-    fun getArtist(
-        query: String,
-        limit: Int
-    ) {
-        viewModelScope.launch {
-            _artistState.value = UiState.Loading
+//    // In HomeViewModel.kt
+//    val songPagingFlow = networkCallRepo.getSongsPaging("trending") // Or a dynamic query
+//        .cachedIn(viewModelScope)
 
-            when (
-                val result = networkCallRepo.searchArtist(
-                    query = query,
-                    limit = limit
-                )
-            ) {
-                is ResultWrapper.Success -> {
-                    _artistState.value =
-                        UiState.Success(result.value.data.results)
-                }
+    val albumPagingFlow = networkCallRepo.getAlbumsPaging("latest")
+        .cachedIn(viewModelScope)
 
-                is ResultWrapper.Failure -> {
-                    _artistState.value =
-                        UiState.Error(result.errorMessage)
-                }
-            }
-        }
+    private val _currentSort = MutableStateFlow(SortType("Ascending", "asc"))
+    val currentSort = _currentSort.asStateFlow()
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val songPagingFlow = _currentSort.flatMapLatest { sort ->
+        networkCallRepo.getSongsPaging(query = "trending", sort = sort.value)
+        // We pass the sort value to the repository
+    }.cachedIn(viewModelScope)
+
+    fun updateSort(newSort: SortType) {
+        _currentSort.value = newSort
+    }
+
+    init {
+        getMostPlayed("hindi", 10)
     }
 
     fun getMostPlayed(query: String = "hindi", limit: Int = 10) {
@@ -73,5 +73,4 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
-
 }

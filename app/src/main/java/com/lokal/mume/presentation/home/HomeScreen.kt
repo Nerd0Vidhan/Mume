@@ -1,5 +1,8 @@
 package com.lokal.mume.presentation.home
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,20 +19,28 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.lokal.mume.data.model.ArtistResult
 import com.lokal.mume.domain.model.SongModel
 import com.lokal.mume.presentation.player.HistoryViewModel
 import com.lokal.mume.presentation.player.PlayerViewModel
 import com.lokal.mume.presentation.utils.*
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun HomeScreenContent(
     modifier: Modifier = Modifier,
+    navController: NavHostController,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     viewModel: HomeViewModel = hiltViewModel(),
     playerViewModel: PlayerViewModel = hiltViewModel(),
     historyViewModel: HistoryViewModel = hiltViewModel()
 ) {
-    val artistState by viewModel.artistState.collectAsStateWithLifecycle()
+    val artistPagingItems = viewModel.artistPagingFlow.collectAsLazyPagingItems()
     val mostPlayedState by viewModel.mostPlayedState.collectAsStateWithLifecycle()
     val history by historyViewModel.history.collectAsStateWithLifecycle()
 
@@ -38,14 +49,13 @@ fun HomeScreenContent(
 
     LaunchedEffect(Unit) {
         historyViewModel.load()
-        viewModel.getArtist(query = "a", limit = 10)
-        viewModel.getMostPlayed(query = "hindi", limit = 10)
+//        viewModel.getArtist(query = "a", limit = 10)
+//        viewModel.getMostPlayed(query = "hindi", limit = 10)
     }
 
     LazyColumn(
         modifier = modifier
-            .fillMaxSize()
-            .padding(bottom = 80.dp),
+            .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
 
@@ -77,60 +87,41 @@ fun HomeScreenContent(
 
         /* ---------------- Artists ---------------- */
         item {
-            SectionWithTitle(title = "Artists", onSeeAll = {}) {
-                when (artistState) {
-                    UiState.Loading -> {
-                        LazyRow(
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            items(10) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    CircleShimmerPlaceholder(size = elementSize)
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    TextShimmerPlaceholder()
+            SectionWithTitle(title = "Artists", onSeeAll = { /* Navigate to Full List */ }) {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    items(
+                        count = artistPagingItems.itemCount,
+                        key = artistPagingItems.itemKey { it.id }
+                    ) { index ->
+                        val artist = artistPagingItems[index]
+                        if (artist != null) {
+                            ArtistCircleItem(
+                                artist = artist,
+                                size = elementSize,
+                                sharedTransitionScope = sharedTransitionScope,
+                                animatedVisibilityScope = animatedVisibilityScope,
+                                onClick = {
+                                    navController.navigate("artist_detail/${artist.id}")
                                 }
-                            }
+                            )
                         }
                     }
 
-                    is UiState.Success -> {
-                        val artists =
-                            (artistState as UiState.Success<List<ArtistResult>>).data
-
-                        LazyRow(
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            items(artists, key = { it.id }) { artist ->
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    CircleContainer(
-                                        artist = artist,
-                                        size = elementSize
-                                    )
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    Text(
-                                        text = artist.name,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.width(elementSize)
-                                    )
-                                }
+                    // Handle Paging States (Loading/Error)
+                    artistPagingItems.apply {
+                        when {
+                            loadState.append is LoadState.Loading -> {
+                                item { CircleShimmerPlaceholder(size = elementSize) }
+                            }
+                            loadState.refresh is LoadState.Loading -> {
+                                items(5) { CircleShimmerPlaceholder(size = elementSize) }
                             }
                         }
                     }
-
-                    is UiState.Error -> {
-                        Text(
-                            text = (artistState as UiState.Error).message,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
-
-                    else -> Unit
                 }
             }
         }
