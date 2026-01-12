@@ -10,8 +10,10 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.lokal.mume.data.model.ArtistResult
 import com.lokal.mume.dummy.FavoritesDummy
 import com.lokal.mume.dummy.PlaylistsDummy
@@ -49,8 +51,11 @@ fun MumeNavGraph(
         }
 
 
-        composable("artist_detail/{artistId}") { backStackEntry ->
-            // Retrieve the object passed from the previous screen
+        composable(
+            route = "artist_detail/{artistId}",
+            // Define arguments for better performance
+            arguments = listOf(navArgument("artistId") { type = NavType.StringType })
+        ) { backStackEntry ->
             val artist = navController.previousBackStackEntry
                 ?.savedStateHandle
                 ?.get<ArtistResult>("artist")

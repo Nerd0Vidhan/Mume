@@ -9,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.lokal.mume.navigation.BottomNavItem
 import com.lokal.mume.navigation.MumeNavGraph
 import com.lokal.mume.navigation.Screen
 import com.lokal.mume.presentation.home.BottomBar
@@ -25,10 +24,12 @@ fun RootPlayerHost(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val isFullScreenComposable = currentRoute == Screen.FullScreen.route
-            || currentRoute == Screen.Search.route
-            || currentRoute == "artist_detail/{artistId}"
-
+    val isFullScreenComposable = remember(currentRoute) {
+        currentRoute == Screen.FullScreen.route ||
+        currentRoute == Screen.Search.route ||
+        currentRoute?.startsWith("artist_detail") == true ||
+        currentRoute?.startsWith("album_detail") == true
+    }
 
 
     SharedTransitionLayout {
@@ -41,26 +42,25 @@ fun RootPlayerHost(navController: NavHostController) {
                 ) { TopBarHeader(navController) }
             },
             bottomBar = {
-                // Use AnimatedVisibility instead of 'if' to allow Shared Elements to finish
                 AnimatedVisibility(
                     visible = !isFullScreenComposable,
                     enter = slideInVertically(initialOffsetY = { it }),
                     exit = slideOutVertically(targetOffsetY = { it })
                 ) {
-                    // Grouping ensures they slide together as a single unit
                     Column {
-                        AnimatedContent(
-                            targetState = state.currentSong != null,
-                            label = "MiniPlayer"
-                        ) { hasSong ->
-                            if (hasSong) {
+                        key(state.currentSong?.id) {
+                            if (state.currentSong != null) {
                                 MiniPlayer(
                                     state = state,
-                                    onExpand = { navController.navigate(Screen.FullScreen.route) },
+                                    onExpand = { 
+                                        navController.navigate(Screen.FullScreen.route) {
+                                            launchSingleTop = true
+                                        }
+                                    },
                                     sharedTransitionScope = this@SharedTransitionLayout,
-                                    animatedVisibilityScope = this@AnimatedVisibility, // Use Scaffold's scope
+                                    animatedVisibilityScope = this@AnimatedVisibility,
                                     playerViewModel = playerViewModel,
-                                    onDismiss = { playerViewModel.pause() }
+                                    onDismiss = { playerViewModel.dismissPlayer() }
                                 )
                             }
                         }
@@ -75,7 +75,9 @@ fun RootPlayerHost(navController: NavHostController) {
             MumeNavGraph(
                 navController = navController,
                 sharedTransitionScope = this@SharedTransitionLayout,
-                modifier = Modifier.padding(padding)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
             )
         }
     }

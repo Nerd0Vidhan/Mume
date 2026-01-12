@@ -33,9 +33,7 @@ class NetworkCallRepoImpl @Inject constructor(
     private val dao: SongDao
 ) : NetworkCallRepo {
 
-    override suspend fun getHome()//: /*HomeData*/
-    {
-    }
+    override suspend fun getHome() { }
 
     override suspend fun searchArtist(
         query: String,
@@ -77,7 +75,6 @@ class NetworkCallRepoImpl @Inject constructor(
     override suspend fun getQueue(): List<SongModel> =
         dao.getQueue().map { it.toDomain() }
 
-    // In NetworkCallRepoImpl.kt
     override fun getArtistPaging(query: String): Flow<PagingData<ArtistResult>> {
         return Pager(
             config = PagingConfig(pageSize = 20, prefetchDistance = 2),
@@ -93,19 +90,18 @@ class NetworkCallRepoImpl @Inject constructor(
                 ?.key ?: "hindi"
 
         val songs = api.randomSongsByGenre(dominantGenre, 5).data.results
-
-
         songs.forEach {
             dao.insert(it.toSongEntity(isInQueue = true))
         }
 
-        return songs.map{songResult -> songResult.toSongModel()}
+        return songs.map { it.toSongModel() }
     }
 
     override suspend fun getHistory(): List<SongModel> {
         return dao.getHistory().map { it.toDomain() }
     }
-    override fun getSongsPaging(query: String,sort: String): Flow<PagingData<SongResult>> {
+
+    override fun getSongsPaging(query: String, sort: String): Flow<PagingData<SongResult>> {
         return Pager(
             config = PagingConfig(pageSize = 20, enablePlaceholders = false),
             pagingSourceFactory = { SongPagingSource(api, query, sort) }
@@ -125,6 +121,7 @@ class NetworkCallRepoImpl @Inject constructor(
             pagingSourceFactory = { ArtistSongPagingSource(api, artistName) }
         ).flow
     }
+
     override suspend fun getArtistDetails(artistId: String): ResultWrapper<BaseResponse<ArtistDetailsResponse>> {
         return try {
             val response = api.getArtistDetails(artistId)
@@ -159,7 +156,11 @@ class NetworkCallRepoImpl @Inject constructor(
         dao.updateProgress(
             songId = songId,
             position = position,
-            timestamp = System.currentTimeMillis() // Update playedAt so it stays in history
+            timestamp = System.currentTimeMillis()
         )
+    }
+
+    override suspend fun clearQueue() {
+        dao.clearQueue() // Call DAO to clear only isInQueue = 1 items
     }
 }

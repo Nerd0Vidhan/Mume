@@ -1,6 +1,5 @@
 package com.lokal.mume.presentation.player
 
-import androidx.compose.runtime.produceState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lokal.mume.data.mapper.toSongModel
@@ -37,33 +36,42 @@ class PlayerViewModel @Inject constructor(
             val history = repo.getHistory()
             if (history.isNotEmpty()) {
                 val lastSong = history.first()
-                // Update state without auto-playing
                 PlaybackStateHolder.state.value = PlaybackState(
                     currentSong = lastSong,
                     isPlaying = false
                 )
-                controller.prepare(lastSong) // Prepare without playing
+                controller.prepare(lastSong)
             }
         }
     }
 
     private fun preloadNext() {
         viewModelScope.launch {
-            val nextInQueue = repo.getNextInQueue() // From Room DAO
+            val nextInQueue = repo.getNextInQueue()
             if (nextInQueue != null) {
                 controller.bufferNext(nextInQueue)
             } else {
-                // If queue is empty, fetch random songs from API
                 val random = repo.getRandomSongs().firstOrNull()
                 random?.let { controller.bufferNext(it) }
             }
         }
     }
 
+    fun dismissPlayer() {
+        viewModelScope.launch {
+            controller.pause()
+            repo.clearQueue() // Clears only queue, keeping history intact
+            PlaybackStateHolder.state.value = PlaybackState(
+                currentSong = null,
+                isPlaying = false
+            )
+        }
+    }
+
     fun playNextInQueue(song: SongModel) {
         viewModelScope.launch {
             repo.addToQueue(song, atTop = true)
-            preloadNext() // Refresh preview
+            preloadNext()
         }
     }
 
@@ -73,10 +81,10 @@ class PlayerViewModel @Inject constructor(
             if (_nextSongPreview.value == null) preloadNext()
         }
     }
+
     fun playNext() {
         viewModelScope.launch {
             val queue = repo.getNextInQueue()
-
             if (queue != null) {
                 controller.play(queue)
                 repo.removeFromQueue(queue.id)
@@ -99,7 +107,6 @@ class PlayerViewModel @Inject constructor(
     fun play(song: SongModel) {
         viewModelScope.launch {
             val currentState = PlaybackStateHolder.state.value
-
             if (currentState.currentSong?.id == song.id) {
                 if (!currentState.isPlaying) {
                     controller.resume()
@@ -115,10 +122,8 @@ class PlayerViewModel @Inject constructor(
     fun playRandom(songs: List<SongResult?>) {
         viewModelScope.launch {
             val validSongs = songs.filterNotNull()
-
             if (validSongs.isNotEmpty()) {
                 val randomIndex = validSongs.indices.random()
-
                 val randomSong = validSongs[randomIndex]
                 play(randomSong.toSongModel())
                 validSongs.toMutableList().apply {
@@ -135,7 +140,6 @@ class PlayerViewModel @Inject constructor(
             if (validSongs.isNotEmpty()) {
                 val firstSong = validSongs[0].toSongModel()
                 play(firstSong)
-
                 if (validSongs.size > 1) {
                     validSongs.drop(1).forEach { song ->
                         repo.addToQueue(song.toSongModel(), atTop = false)
@@ -152,39 +156,37 @@ class PlayerViewModel @Inject constructor(
             validSongs.forEach { song ->
                 repo.addToQueue(song.toSongModel(), atTop = false)
             }
-
             if (playbackState.value.nextSong == null && validSongs.isNotEmpty()) {
                 controller.bufferNext(validSongs[0].toSongModel())
             }
         }
     }
+
     fun pause() {
         controller.pause()
     }
 
-    fun playPrevious(){
+    fun playPrevious() {
         viewModelScope.launch {
-            val queue = repo.getHistory()
-            val previous = queue.firstOrNull()
-            ?: repo.generateNextSongs().firstOrNull()
-
+            val history = repo.getHistory()
+            val previous = history.getOrNull(1) // Index 1 is the previous song
             previous?.let { play(it) }
-
         }
     }
+
     fun seekTo(positionMs: Float) {
         viewModelScope.launch {
             controller.seekTo(positionMs.toLong())
         }
     }
 
-    fun seekForward(){
+    fun seekForward() {
         viewModelScope.launch {
             controller.seekForward()
         }
     }
 
-    fun seekBackward(){
+    fun seekBackward() {
         viewModelScope.launch {
             controller.seekBackward()
         }

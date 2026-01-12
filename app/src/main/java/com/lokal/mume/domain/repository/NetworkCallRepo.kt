@@ -1,8 +1,6 @@
 package com.lokal.mume.domain.repository
 
 import androidx.paging.PagingData
-import com.lokal.mume.data.mapper.toEntity
-import com.lokal.mume.data.mapper.toSongModel
 import com.lokal.mume.data.model.AlbumResult
 import com.lokal.mume.data.model.ArtistDetailsResponse
 import com.lokal.mume.data.model.ArtistResponse
@@ -14,7 +12,7 @@ import com.lokal.mume.domain.model.SongModel
 import kotlinx.coroutines.flow.Flow
 
 interface NetworkCallRepo {
-    suspend fun getHome()//: /*HomeData*/
+    suspend fun getHome()
 
     suspend fun searchArtist(query: String, limit: Int): ResultWrapper<ArtistResponse>
 
@@ -42,6 +40,8 @@ interface NetworkCallRepo {
     suspend fun getRandomSongs(): List<SongModel>
 
     suspend fun updateLastPosition(songId: String, position: Long)
+
+    suspend fun clearQueue() // Added method
 }
 
 
